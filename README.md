@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AyurCare 
+A modular MVP platform for Ayurvedic consultations where users can
+- Discover Ayurvedic doctors by specialization and availability
+- Book, view, and manage consultations
+- Extend flows for cancellations/rescheduling
 
-## Getting Started
+#### ✅ Link: https://ayurcare-web.vercel.app
 
-First, run the development server:
+#### Backend: https://github.com/Akash20x/ayurcare-backend
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📝 Technologies
+AyurCare is built using the following tech stack and additional libraries:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend
+- Next.js
+- Typescript
+- Zustand
+- React Query
+- Axios
+- TailwindCSS
+- Shadcn
+- Lucide React
+- Zod
+- React DayPicker
+- Deploy on Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  ### Backend
+- ExpressJs
+- PostgreSQL 
+- Jsonwebtoken
+- Prisma
+- Redis
+- BcryptJS
+- Deploy on Render
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Project Requirements
 
-## Learn More
+## Functional Flows
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Doctor Discovery
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Search by specialization and consultation mode (online/in-person)
+- Backend-powered filtering and sorting by soonest availability
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Slot Booking
 
-## Deploy on Vercel
+- Lock slot for 5 minutes once selected
+- Require user confirmation (mock OTP step)
+- Release slot if not confirmed within the lock time
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Reschedule Flow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Allow rescheduling/cancellation more than 24 hours before the appointment
+- Released slots become available to other users
+
+### 4. Appointment Dashboard
+
+- View upcoming and past appointments
+- Filter by status: Booked, Completed, Cancelled
+
+
+## ⭐ Author
+- [@Akash Jain](https://github.com/Akash20x)
+

@@ -7,10 +7,14 @@ import { getInitials, toSlug } from "@/lib/helpers/stringHelpers";
 
 export const revalidate = 60;
 
-export default async function DoctorProfilePage(
-  props: { params: Promise<{ slug: string }> } 
-) {
-  const { slug } = await props.params; 
+export default async function DoctorProfilePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params; 
+
+  if (!slug) return notFound();  
 
   const doctor = await getDoctorBySlug(slug);
   if (!doctor) return notFound();

@@ -24,18 +24,19 @@ AyurCare is built using the following tech stack and additional libraries:
 - React DayPicker
 - Deploy on Vercel
 
-  ### Backend
+### Backend
 - ExpressJs
-- PostgreSQL 
-- Jsonwebtoken
+- PostgreSQL
 - Prisma
-- Redis
+- Jsonwebtoken
 - BcryptJS
+- Redis
+- Jest
 - Deploy on Render
 
-# Project Requirements
+## Project Requirements
 
-## Functional Flows
+### Functional Flows
 
 ### 1. Doctor Discovery
 

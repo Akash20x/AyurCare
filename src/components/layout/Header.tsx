@@ -27,12 +27,6 @@ export default function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated === false) {
-      router.push("/login");
-    }
-  }, [isLoading, isAuthenticated, router]);
-
   const handleLogout = async () => {
     try {
       await logout();

@@ -42,7 +42,19 @@ export default function ExplorePageClient() {
     return f;
   }, [q, consultationModes, specializations, earliestAvailable]);
 
-  const [appliedFilter, setAppliedFilter] = useState<DoctorQuery>({});
+  const [appliedFilter, setAppliedFilter] = useState<DoctorQuery>(() => {
+    const initialFilter: DoctorQuery = {};
+    const query = params.get("q");
+    const consultationMode = params.get("consultation_mode");
+    const specialization = params.get("specialization");
+
+    if (query) initialFilter.q = query;
+    if (consultationMode) initialFilter.consultationMode = consultationMode as ConsultationMode;
+    if (specialization) initialFilter.specialization = specialization;
+    if (params.get("available") === "earliest") initialFilter.earliestAvailable = "earliest";
+
+    return initialFilter;
+  });
   const { data: doctorsData, isLoading, refetch } = useDoctors(appliedFilter, {
     enabled: false,
   });
@@ -67,17 +79,6 @@ export default function ExplorePageClient() {
       router.replace(`/explore?q=${encodeURIComponent(q)}`);
     }
   };
-
-  useEffect(() => {
-    if (
-      params.get("q") ||
-      params.get("consultation_mode") ||
-      params.get("specialization") ||
-      params.get("available")
-    ) {
-      setAppliedFilter(filter);
-    }
-  }, []);
 
   useEffect(() => {
     refetch();

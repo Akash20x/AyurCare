@@ -56,7 +56,7 @@ export default function VerifyOtpPageClient() {
     setCountdown(60);
     setIsResendDisabled(true);
     refs.current[0]?.focus();
-  }, [user?.email, generateOtp]);
+  }, [user, generateOtp]);
 
   useEffect(() => {
     if (isAuthenticated && user?.email && !otpGeneratedRef.current) {

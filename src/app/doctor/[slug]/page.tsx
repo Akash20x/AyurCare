@@ -2,10 +2,8 @@ import { notFound } from "next/navigation";
 import { Calendar, Video, MapPin, Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getDoctorBySlug } from "@/lib/data/doctors";
+import { getDoctorBySlug } from "@/lib/server/doctorCatalog";
 import { getInitials, toSlug } from "@/lib/helpers/stringHelpers";
-
-export const revalidate = 60;
 
 export default async function DoctorProfilePage({
   params,
@@ -16,7 +14,12 @@ export default async function DoctorProfilePage({
 
   if (!slug) return notFound();  
 
-  const doctor = await getDoctorBySlug(slug);
+  const result = await getDoctorBySlug(slug);
+  if (result.error) {
+    return <div className="min-h-screen flex items-center justify-center p-6 text-red-600">{result.error}</div>;
+  }
+
+  const doctor = result.data;
   if (!doctor) return notFound();
 
   const initials = getInitials(doctor.name); 

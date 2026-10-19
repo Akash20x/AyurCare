@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,19 +19,23 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
-import { Menu, User, Calendar, LogOut } from "lucide-react";
+import { Menu, User, Calendar, LogOut, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { clearBookingRecoveryContext } from "@/lib/bookingRecovery";
 
 export default function Header() {
-  const { user, isAuthenticated, logout, isLoading } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch {}
+    queryClient.removeQueries({ queryKey: ["bookingDraft"] });
+    clearBookingRecoveryContext();
     router.push("/login");
   };
 
@@ -82,8 +87,9 @@ export default function Header() {
                   <Button
                     variant="outline"
                     className="rounded-full w-8 h-8 p-0 flex items-center justify-center"
+                    aria-label="Open account menu"
                   >
-                    <User className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+                    <User className="w-6 h-6 text-gray-700 dark:text-gray-200" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48">
@@ -96,6 +102,17 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  {user?.role === "admin" && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center gap-2 cursor-pointer outline-none">
+                          <ShieldCheck className="w-4 h-4" />
+                          Admin
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center gap-2 focus:text-red-700 cursor-pointer outline-none"
@@ -124,8 +141,9 @@ export default function Header() {
                   variant="ghost"
                   size="icon"
                   className="text-gray-700 dark:text-gray-200"
+                  aria-label="Open navigation menu"
                 >
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-6 h-6" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
 
@@ -179,6 +197,17 @@ export default function Header() {
                         <Calendar className="w-4 h-4" />
                         Dashboard
                       </Link>
+
+                      {user?.role === "admin" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-2 text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          Admin
+                        </Link>
+                      )}
 
                       <button
                         onClick={() => {

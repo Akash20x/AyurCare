@@ -113,3 +113,13 @@ body {
   fill: #22c55e; 
   stroke: #22c55e; 
 }
+
+/* Compact admin data tables: preserve the existing visual language while
+   allowing operational views to show more records without excess row height. */
+.min-w-180 th {
+  vertical-align: middle;
+}
+
+.min-w-180 td {
+  vertical-align: middle;
+}

@@ -38,7 +38,7 @@ export function Toggle({
         className={cn(
           "relative h-6 w-11 rounded-full transition-colors",
           "bg-gray-200 dark:bg-gray-700",
-          checked && "bg-primary"
+          checked && "bg-emerald-600 dark:bg-emerald-500"
         )}
       >
         <div

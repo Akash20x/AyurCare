@@ -1,17 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/authStore";
 import { useAppointments } from "@/hooks";
 import { appointmentKeys } from "@/hooks/useAppointments";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNextAppointment } from "@/lib/appointments";
 import { CalendarDays, Clock, Mail } from "lucide-react";
-import { ApiResponse, Appointment, AppointmentStatus } from "@/types";
-import { formatTimeOnly } from "@/lib/helpers/dateHelpers";
+import { ApiResponse, AppointmentListItem, AppointmentStatus } from "@/types";
+import { formatTimeOnly } from "@/lib/helpers";
+
+function hasDifferentContactEmail(contactEmail: string | null, accountEmail?: string) {
+  return Boolean(
+    contactEmail
+      && accountEmail
+      && contactEmail.trim().toLowerCase() !== accountEmail.trim().toLowerCase()
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,17 +33,30 @@ export default function DashboardPage() {
     "upcoming"
   );
 
+  // The API combines status and time filters inconsistently. Fetch the chosen
+  // status without a time filter and apply the display-only date filter here.
   const { data, isLoading, isError, error } = useAppointments(
     activeFilter === "all" ? undefined : activeFilter,
-    timeFilter
+    "all"
   );
 
-  const appointments = data?.data || [];
+  const appointments = useMemo(() => {
+    const allAppointments = data?.data || [];
+    if (activeFilter === "RESCHEDULED" || timeFilter === "all") return allAppointments;
+
+    const now = new Date();
+    return allAppointments.filter((appointment) => {
+      if (!appointment.timeSlot) return timeFilter === "past";
+      const date = appointment.timeSlot.date.split("T")[0];
+      const slotDate = new Date(`${date}T${appointment.timeSlot.startTime}`);
+      return timeFilter === "upcoming" ? slotDate >= now : slotDate < now;
+    });
+  }, [activeFilter, data?.data, timeFilter]);
   const queryClient = useQueryClient();
 
   const defaultUpcomingData = queryClient.getQueryData<
-    ApiResponse<Appointment[]>
-  >(appointmentKeys.lists("BOOKED", "upcoming"));
+    ApiResponse<AppointmentListItem[]>
+  >(appointmentKeys.lists(user?.id, "BOOKED", "all"));
 
   const nextAppointment = getNextAppointment(defaultUpcomingData?.data || []);
 
@@ -77,11 +99,12 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex items-center gap-2 bg-green-50 text-green-800 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                    <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>
-                      {new Date(nextAppointment.timeSlot?.date).toLocaleDateString(
+                {nextAppointment.timeSlot ? (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex items-center gap-2 bg-green-50 text-green-800 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
+                      <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>
+                        {new Date(nextAppointment.timeSlot.date).toLocaleDateString(
                         "en-US",
                         {
                           weekday: "long",
@@ -90,16 +113,19 @@ export default function DashboardPage() {
                           day: "numeric",
                         }
                       )}
-                    </span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-green-50 text-green-800 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
+                      <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>
+                        {formatTimeOnly(nextAppointment.timeSlot.startTime)} –{" "}
+                        {formatTimeOnly(nextAppointment.timeSlot.endTime)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-green-50 text-green-800 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                    <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>
-                      {formatTimeOnly(nextAppointment.timeSlot?.startTime)} –{" "}
-                      {formatTimeOnly(nextAppointment.timeSlot?.endTime)}
-                    </span>
-                  </div>
-                </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Slot details are unavailable</span>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -111,15 +137,16 @@ export default function DashboardPage() {
             Your Appointments
           </h2>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto">
               <label className="text-sm font-medium text-gray-700">Time:</label>
               <select
-                className="p-2 border rounded-md bg-white text-sm sm:text-base"
+                className="h-11 w-full rounded-md border bg-white px-3 text-sm sm:w-auto sm:text-base"
                 value={timeFilter}
                 onChange={(e) =>
                   setTimeFilter(e.target.value as "upcoming" | "past" | "all")
                 }
+                disabled={activeFilter === "RESCHEDULED"}
               >
                 <option value="upcoming">Upcoming</option>
                 <option value="past">Past</option>
@@ -127,16 +154,18 @@ export default function DashboardPage() {
               </select>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto">
               <label className="text-sm font-medium text-gray-700">
                 Status:
               </label>
               <select
-                className="p-2 border rounded-md bg-white text-sm sm:text-base"
+                className="h-11 w-full rounded-md border bg-white px-3 text-sm sm:w-auto sm:text-base"
                 value={activeFilter}
-                onChange={(e) =>
-                  setActiveFilter(e.target.value as AppointmentStatus | "all")
-                }
+                onChange={(e) => {
+                  const status = e.target.value as AppointmentStatus | "all";
+                  setActiveFilter(status);
+                  if (status === "RESCHEDULED") setTimeFilter("all");
+                }}
               >
                 <option value="BOOKED">Booked</option>
                 <option value="COMPLETED">Completed</option>
@@ -149,9 +178,10 @@ export default function DashboardPage() {
         </div>
 
         {isLoading && (
-          <p className="text-center text-gray-500 py-6">
-            Loading appointments...
-          </p>
+          <div role="status" aria-label="Loading appointments" className="space-y-3">
+            <span className="sr-only">Loading appointments</span>
+            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-44 w-full rounded-xl bg-slate-200/70" />)}
+          </div>
         )}
 
         {isError && (
@@ -175,11 +205,21 @@ export default function DashboardPage() {
                   <p className="text-gray-500 text-sm sm:text-base">
                     {appointment.doctor.specialization}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
+                    <span>Fee: {appointment.consultationFee !== null ? `₹${appointment.consultationFee}` : "Not recorded"}</span>
+                    {hasDifferentContactEmail(appointment.contactEmail, user?.email) && appointment.patientName && (
+                      <span>• Patient Name: {appointment.patientName}</span>
+                    )}
+                    {hasDifferentContactEmail(appointment.contactEmail, user?.email) && (
+                      <span>• Patient Email: {appointment.contactEmail}</span>
+                    )}
+                  </div>
 
-                  <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-gray-600 text-sm">
-                    <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                      <CalendarDays className="w-4 h-4 text-green-700" />
-                      {new Date(appointment.timeSlot.date).toLocaleDateString(
+                  {appointment.timeSlot && appointment.status !== "RESCHEDULED" ? (
+                    <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-gray-600 text-sm">
+                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
+                        <CalendarDays className="w-4 h-4 text-green-700" />
+                        {new Date(appointment.timeSlot.date).toLocaleDateString(
                         "en-US",
                         {
                           weekday: "short",
@@ -187,19 +227,26 @@ export default function DashboardPage() {
                           day: "numeric",
                           year: "numeric",
                         }
-                      )}
-                    </div>
+                        )}
+                      </div>
 
-                    <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                      <Clock className="w-4 h-4 text-green-700" />
-                      {formatTimeOnly(appointment.timeSlot.startTime)} –{" "}
-                      {formatTimeOnly(appointment.timeSlot.endTime)}
+                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
+                        <Clock className="w-4 h-4 text-green-700" />
+                        {formatTimeOnly(appointment.timeSlot.startTime)} –{" "}
+                        {formatTimeOnly(appointment.timeSlot.endTime)}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {appointment.status === "RESCHEDULED"
+                        ? "Rescheduled history — this record has no active slot."
+                        : "This appointment has no active slot."}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3 self-end sm:self-center w-full sm:w-auto justify-between sm:justify-end">
-                  <span className="bg-green-100 text-green-800 text-xs sm:text-sm font-semibold px-3 py-1 rounded-full">
+                  <span className={`text-xs sm:text-sm font-semibold px-3 py-1 rounded-full ${appointment.status === "RESCHEDULED" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}>
                     {appointment.status}
                   </span>
                   <Button

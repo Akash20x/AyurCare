@@ -10,7 +10,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { UserLoginInput, userLoginSchema } from "@/lib/validations";
 import { validateForm } from "@/lib/form";
-import { Leaf } from "lucide-react";
+import { Eye, EyeOff, Leaf } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPageClient() {
   const { login, isLoading, clearError, error } = useAuthStore();
@@ -23,6 +24,7 @@ export default function LoginPageClient() {
   });
 
   const [formErrors, setFormErrors] = useState<Partial<UserLoginInput>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     clearError();
@@ -64,7 +66,7 @@ export default function LoginPageClient() {
   };
 
   return (
-    <div className="h-[calc(100vh-2rem)] 2xl:h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f8faf8] p-4">
+    <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center bg-[#f8faf8] px-4 py-10">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
           <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100">
@@ -93,6 +95,10 @@ export default function LoginPageClient() {
           </CardHeader>
 
           <CardContent className="space-y-5">
+            <GoogleSignInButton
+              onSuccess={() => router.push(searchParams.get("next") || "/dashboard")}
+            />
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -110,15 +116,26 @@ export default function LoginPageClient() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Enter your password"
-                  className={formErrors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter your password"
+                    className={`pr-11 ${formErrors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-r-md text-gray-500 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+                  </button>
+                </div>
                 {formErrors.password && (
                   <p className="text-xs text-red-600">{formErrors.password}</p>
                 )}

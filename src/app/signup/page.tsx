@@ -12,6 +12,7 @@ import z from "zod";
 import { userRegistrationSchema } from "@/lib/validations";
 import { validateForm } from "@/lib/form";
 import { Leaf, Eye, EyeOff } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 const registerFormSchema = userRegistrationSchema
   .extend({
@@ -77,7 +78,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8faf8] p-4">
+    <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center bg-[#f8faf8] px-4 py-10">
       <div className="w-full max-w-lg">
         {/* Logo + Heading */}
         <div className="text-center space-y-3 mb-6">
@@ -111,7 +112,9 @@ export default function SignupPage() {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <GoogleSignInButton onSuccess={() => router.push("/dashboard")} />
+
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               {/* Full Name */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="name">Full Name</Label>

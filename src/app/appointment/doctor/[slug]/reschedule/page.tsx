@@ -6,10 +6,11 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/stores/authStore";
 import { useDoctorById, useSlot, useConfirmReschedule } from "@/hooks";
 import { toast } from "sonner";
-import { formatDateLong } from "@/lib/helpers/dateHelpers";
+import { formatDateLong } from "@/lib/helpers";
 
 export default function RescheduleConfirmationPage() {
   const router = useRouter();
@@ -21,7 +22,6 @@ export default function RescheduleConfirmationPage() {
   const appointmentId = searchParams.get("appointmentId");
   const oldSlotId = searchParams.get("oldSlotId");
   const dateFromUrl = searchParams.get("date");
-  const mode = searchParams.get("mode");
   const doctorId = searchParams.get("doctorId"); // must exist in URL
 
   const { data: doctorData, isLoading: doctorLoading, error: doctorError } = useDoctorById(doctorId);
@@ -76,8 +76,14 @@ export default function RescheduleConfirmationPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <p className="text-gray-600">Loading appointment details...</p>
+      <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="mx-auto max-w-2xl space-y-5" role="status" aria-label="Loading reschedule details">
+          <span className="sr-only">Loading reschedule details</span>
+          <Skeleton className="mx-auto h-8 w-72" />
+          <Skeleton className="h-36 w-full rounded-xl" />
+          <Skeleton className="h-36 w-full rounded-xl" />
+          <div className="flex justify-end"><Skeleton className="h-10 w-44 rounded-lg" /></div>
+        </div>
       </div>
     );
   }
@@ -130,11 +136,7 @@ export default function RescheduleConfirmationPage() {
               <p className="text-gray-700">
                 Time: {slot.startTime} - {slot.endTime}
               </p>
-              {mode && (
-                <p className="text-gray-700">
-                  Consultation Mode: {mode === "online" ? "Online" : "In-person"}
-                </p>
-              )}
+              <p className="text-gray-700">Consultation Mode: In-person</p>
             </div>
 
             <div className="flex gap-3 justify-end">

@@ -1,17 +1,24 @@
-import { authApi, clearAllAuthData, setAuthTokens, refreshToken as apiRefreshToken } from "@/lib/api";
+import { authApi, clearAllAuthData, hasAuthenticatedSession, refreshToken as apiRefreshToken } from "@/lib/api";
 import { UserLoginInput, UserRegistrationInput } from "@/lib/validations";
-import { User } from "@/types";
+import { OtpSendResult, OtpVerificationResult, User } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { handleAxiosError } from "@/lib/helpers/apiHelpers"
+import { handleAxiosError } from "@/lib/helpers"
+import { clearBookingRecoveryContext } from "@/lib/bookingRecovery";
+
+type SessionStateResult = {
+  authenticated: boolean;
+  shouldRefresh: boolean;
+};
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean | null;
   isLoading: boolean;
   error: string | null;
   otp: string | null;
+  otpDelivery: OtpSendResult | null;
+  otpVerification: OtpVerificationResult | null;
   otpLoading: boolean;
   otpError: string | null;
 }
@@ -19,14 +26,15 @@ interface AuthState {
 interface AuthActions {
   register: (data: UserRegistrationInput) => Promise<void>;
   login: (data: UserLoginInput) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
-  getMe: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  getSession: () => Promise<SessionStateResult>;
+  refreshToken: () => Promise<boolean>;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   checkAuthStatus: () => boolean;
-  generateOtp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, otp: string) => Promise<boolean>;
+  generateOtp: (email: string) => Promise<OtpSendResult>;
+  verifyOtp: (email: string, otp: string) => Promise<OtpVerificationResult | null>;
   clearOtp: () => void;
 }
 
@@ -36,11 +44,12 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
       isAuthenticated: null,
       isLoading: false,
       error: null,
       otp: null,
+      otpDelivery: null,
+      otpVerification: null,
       otpLoading: false,
       otpError: null,
 
@@ -51,10 +60,9 @@ export const useAuthStore = create<AuthStore>()(
           const res = await authApi.register(data);
 
           if (res.data) {
-            setAuthTokens(res.data.accessToken);
+            const { session } = await authApi.getSession();
             set({
-              user: res.data.user,
-              token: res.data.accessToken,
+              user: hasAuthenticatedSession(session) ? session.user : res.data.user,
               isAuthenticated: true,
               isLoading: false,
             });
@@ -75,10 +83,9 @@ export const useAuthStore = create<AuthStore>()(
           const res = await authApi.login(data);
 
           if (res.data) {
-            setAuthTokens(res.data.accessToken);
+            const { session } = await authApi.getSession();
             set({
-              user: res.data.user,
-              token: res.data.accessToken,
+              user: hasAuthenticatedSession(session) ? session.user : res.data.user,
               isAuthenticated: true,
               isLoading: false,
             });
@@ -87,6 +94,26 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (err) {
           const { message } = handleAxiosError(err, "Login failed");
+          set({ isLoading: false, error: message });
+          throw new Error(message);
+        }
+      },
+
+      loginWithGoogle: async (credential: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          const res = await authApi.loginWithGoogle(credential);
+
+          if (!res.data) throw new Error(res.message || "Google sign-in failed");
+
+          const { session } = await authApi.getSession();
+          set({
+            user: hasAuthenticatedSession(session) ? session.user : res.data.user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (err) {
+          const { message } = handleAxiosError(err, "Google sign-in failed");
           set({ isLoading: false, error: message });
           throw new Error(message);
         }
@@ -101,24 +128,34 @@ export const useAuthStore = create<AuthStore>()(
           console.warn(message);
         } finally {
           clearAllAuthData();
-          set({ user: null, token: null, isAuthenticated: false });
+          clearBookingRecoveryContext();
+          set({
+            user: null,
+            isAuthenticated: false,
+            otp: null,
+            otpDelivery: null,
+            otpVerification: null,
+          });
         }
       },
 
       // ------------------ Get current user ------------------
-      getMe: async () => {
+      getSession: async () => {
         try {
           set({ isLoading: true, isAuthenticated: false });
-          const res = await authApi.getMe();
+          const { session, shouldRefresh } = await authApi.getSession();
 
-          if (res.data) {
-            set({ user: res.data, isAuthenticated: true, isLoading: false });
+          if (hasAuthenticatedSession(session)) {
+            set({ user: session.user, isAuthenticated: true, isLoading: false });
+            return { authenticated: true, shouldRefresh: false };
           } else {
             set({ user: null, isAuthenticated: false, isLoading: false });
+            return { authenticated: false, shouldRefresh };
           }
         } catch (err) {
-          const { message } = handleAxiosError(err, "getMe failed");
+          const { message } = handleAxiosError(err, "getSession failed");
           set({ user: null, isAuthenticated: false, isLoading: false, error: message });
+          return { authenticated: false, shouldRefresh: false };
         }
       },
 
@@ -126,12 +163,14 @@ export const useAuthStore = create<AuthStore>()(
       refreshToken: async () => {
         try {
           await apiRefreshToken();
-          const accessToken = localStorage.getItem("accessToken")!;
-          set({ token: accessToken });
+          return (await get().getSession()).authenticated;
         } catch (err) {
           const { message } = handleAxiosError(err, "Refresh token failed");
           console.warn(message);
-          await get().logout();
+          clearAllAuthData();
+          clearBookingRecoveryContext();
+          set({ user: null, isAuthenticated: false });
+          return false;
         }
       },
 
@@ -140,41 +179,44 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ otpLoading: true, otpError: null });
           const res = await authApi.generateOtp(email);
-          set({ otp: res?.data?.otp, otpLoading: false });
+          if (!res.data) throw new Error(res.message || "Failed to generate OTP");
+          set({ otp: null, otpDelivery: res.data, otpVerification: null, otpLoading: false });
+          return res.data;
         } catch (err) {
           const { message } = handleAxiosError(err, "Failed to generate OTP");
           set({ otpError: message, otpLoading: false });
+          throw new Error(message);
         }
       },
 
       verifyOtp: async (email, otpCode) => {
         try {
           set({ otpLoading: true, otpError: null });
-          await authApi.verifyOtp(email, otpCode);
-          set({ otpLoading: false });
-          return true;
+          const res = await authApi.verifyOtp(email, otpCode);
+          if (!res.data) throw new Error(res.message || "Failed to verify OTP");
+          set({ otpVerification: res.data, otpLoading: false });
+          return res.data;
         } catch (err) {
           const { message } = handleAxiosError(err, "Failed to verify OTP");
           set({ otpError: message, otpLoading: false });
-          return false;
+          return null;
         }
       },
 
-      clearOtp: () => set({ otp: null, otpError: null }),
+      clearOtp: () => set({ otp: null, otpDelivery: null, otpVerification: null, otpError: null }),
       clearError: () => set({ error: null }),
       setLoading: (loading: boolean) => set({ isLoading: loading }),
 
       // ------------------ Check auth status ------------------
       checkAuthStatus: () => {
         const state = get();
-        return !!(state.user && state.token && state.isAuthenticated);
+        return !!(state.user && state.isAuthenticated);
       },
     }),
     {
       name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

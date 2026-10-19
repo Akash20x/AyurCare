@@ -1,8 +1,8 @@
 import "server-only";
 
 import { cache } from "react";
-import type { ApiResponse, Doctor, DoctorQuery } from "@/types";
-import { toSlug } from "@/lib/helpers/stringHelpers";
+import type { Doctor, DoctorQuery, PaginatedDoctorResponse } from "@/types";
+import { toSlug } from "@/lib/helpers";
 
 const API_BASE_URL = (
   process.env.API_INTERNAL_BASE_URL ||
@@ -46,7 +46,7 @@ function doctorListUrl(query: DoctorQuery) {
   return `${API_BASE_URL}/doctors${queryString ? `?${queryString}` : ""}`;
 }
 
-export const listDoctors = cache(async (query: DoctorQuery = {}): Promise<DoctorCatalogResult<Doctor[]>> => {
+export const listDoctorPage = cache(async (query: DoctorQuery = {}): Promise<DoctorCatalogResult<PaginatedDoctorResponse>> => {
   const isAvailabilityQuery = query.earliestAvailable === "earliest";
 
   try {
@@ -55,14 +55,31 @@ export const listDoctors = cache(async (query: DoctorQuery = {}): Promise<Doctor
       : { next: { revalidate: DOCTOR_CATALOG_REVALIDATE_SECONDS } });
 
     if (!response.ok) {
-      return { data: [], error: "Unable to load doctors right now." };
+      return {
+        data: { success: false, data: [], currentPage: query.page ?? 1, pageSize: 0, totalPages: 0, totalResults: 0 },
+        error: "Unable to load doctors right now.",
+      };
     }
 
-    const payload = await response.json() as ApiResponse<Doctor[]>;
-    return { data: Array.isArray(payload.data) ? payload.data : [], error: null };
+    const payload = await response.json() as PaginatedDoctorResponse;
+    return {
+      data: {
+        ...payload,
+        data: Array.isArray(payload.data) ? payload.data : [],
+      },
+      error: null,
+    };
   } catch {
-    return { data: [], error: "Unable to load doctors right now." };
+    return {
+      data: { success: false, data: [], currentPage: query.page ?? 1, pageSize: 0, totalPages: 0, totalResults: 0 },
+      error: "Unable to load doctors right now.",
+    };
   }
+});
+
+export const listDoctors = cache(async (query: DoctorQuery = {}): Promise<DoctorCatalogResult<Doctor[]>> => {
+  const result = await listDoctorPage(query);
+  return { data: result.data.data ?? [], error: result.error };
 });
 
 export const getDoctorBySlug = cache(async (slug: string): Promise<DoctorCatalogResult<Doctor | null>> => {

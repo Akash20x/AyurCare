@@ -1,17 +1,22 @@
 import {
   useMutation,
+  useInfiniteQuery,
   useQuery,
   useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { doctorApi } from "@/lib/api";
+import { formatDateKey } from "@/lib/helpers";
 import {
   ApiResponse,
-  Appointment,
   AvailableSlot,
+  CreateBatchTimeSlotsInput,
+  CreateTimeSlotsInput,
   Doctor,
   DoctorFilter,
+  DoctorInput,
   DoctorQuery,
+  PaginatedDoctorResponse,
   LockSlotData,
   LockSlotInput,
   SlotFilter,
@@ -22,6 +27,7 @@ export const doctorKeys = {
   all: ["doctors"] as const,
   lists: () => [...doctorKeys.all, "list"] as const,
   list: (filter?: DoctorFilter) => [...doctorKeys.lists(), filter] as const,
+  infiniteList: (filter?: DoctorQuery) => [...doctorKeys.lists(), "infinite", filter] as const,
   profile: (name: string) => [...doctorKeys.all, "profile", name] as const,
   byId: (id?: string) => ["doctorById", id] as const,
   availableDates: (doctorId?: string) => ["availableDates", doctorId] as const,
@@ -40,7 +46,7 @@ function slugToName(slug: string) {
 
 export function filterSlots(slots: AvailableSlot[], date: string): AvailableSlot[] {
   const now = new Date();
-  const isToday = date === now.toISOString().slice(0, 10);
+  const isToday = date === formatDateKey(now);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   return slots.filter((slot) => {
@@ -49,6 +55,11 @@ export function filterSlots(slots: AvailableSlot[], date: string): AvailableSlot
     return slot.status === "AVAILABLE" && (!isToday || slotMinutes > currentMinutes);
   });
 }
+
+export type DoctorAvailability = {
+  dates: string[];
+  slots: AvailableSlot[];
+};
 
 // --------------------- Hooks ---------------------
 
@@ -63,6 +74,25 @@ export function useDoctors<T extends DoctorFilter = DoctorFilter>(
     staleTime: 30_000,
     retry: 2,
     ...options,
+  });
+}
+
+export function useInfiniteDoctors(filter: DoctorQuery, initialPage?: PaginatedDoctorResponse) {
+  return useInfiniteQuery({
+    queryKey: doctorKeys.infiniteList(filter),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => doctorApi.getAllDoctors({
+      ...filter,
+      ...(pageParam > 1 ? { page: pageParam } : {}),
+    }),
+    getNextPageParam: (lastPage) => (
+      lastPage.currentPage < lastPage.totalPages ? lastPage.currentPage + 1 : undefined
+    ),
+    initialData: initialPage
+      ? { pages: [initialPage], pageParams: [1] }
+      : undefined,
+    staleTime: 30_000,
+    retry: 2,
   });
 }
 
@@ -126,17 +156,17 @@ export function useAvailableSlots(filter?: SlotFilter) {
 // Get available dates (next 28 days only where slots exist)
 // hooks/useAvailableDates.ts
 export function useAvailableDates(doctorId?: string) {
-  return useQuery<string[], Error>({
+  return useQuery<DoctorAvailability, Error>({
     queryKey: doctorKeys.availableDates(doctorId),
     queryFn: async () => {
-      if (!doctorId) return [];
+      if (!doctorId) return { dates: [], slots: [] };
 
       const today = new Date();
-      const start = today.toISOString().slice(0, 10);
+      const start = formatDateKey(today);
 
       const endDate = new Date(today);
       endDate.setDate(today.getDate() + 27);      // next 28 days
-      const end = endDate.toISOString().slice(0, 10);
+      const end = formatDateKey(endDate);
 
       // ✅ Single API call with start & end
       const res = await doctorApi.getAvailableSlots({ doctorId, start, end });
@@ -149,12 +179,15 @@ export function useAvailableDates(doctorId?: string) {
       const dateSet = new Set<string>();
       allSlots.forEach((slot) => {
         const dateKey = slot.date.slice(0, 10);
-       if (dateKey === new Date().toISOString().slice(0, 10) || filterSlots([slot], dateKey).length > 0) {
+        if (filterSlots([slot], dateKey).length > 0) {
           dateSet.add(dateKey);
         }
       });
 
-      return [...dateSet].sort(); 
+      return {
+        dates: [...dateSet].sort(),
+        slots: allSlots,
+      };
     },
     enabled: Boolean(doctorId),
     staleTime: 60_000,
@@ -178,25 +211,46 @@ export function useLockSlot() {
   });
 }
 
-export function useConfirmAppointment() {
+export function useCreateDoctor() {
   const queryClient = useQueryClient();
-  return useMutation<ApiResponse<Appointment>, Error, { doctorId: string; slotId: string; notes?: string }>({
-    mutationFn: ({ doctorId, slotId, notes }) =>
-      doctorApi.confirmAppointment(doctorId, slotId, notes),
+  return useMutation<ApiResponse<{ doctor: Doctor }>, Error, DoctorInput>({
+    mutationFn: doctorApi.create,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: doctorKeys.lists() }),
+  });
+}
+
+export function useUpdateDoctor() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<{ doctor: Doctor }>, Error, { doctorId: string; data: Partial<DoctorInput> }>({
+    mutationFn: ({ doctorId, data }) => doctorApi.update(doctorId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: doctorKeys.availableSlots(variables.doctorId, undefined),
-      });
-      queryClient.invalidateQueries({
-        queryKey: doctorKeys.availableDates(variables.doctorId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["appointments"], // if you add useAppointments hook
-      });
+      queryClient.invalidateQueries({ queryKey: doctorKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: doctorKeys.byId(variables.doctorId) });
     },
   });
 }
 
+export function useCreateTimeSlots() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<AvailableSlot[]>, Error, CreateTimeSlotsInput>({
+    mutationFn: doctorApi.createSlots,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["availableSlots", variables.doctorId] });
+      queryClient.invalidateQueries({ queryKey: doctorKeys.availableDates(variables.doctorId) });
+    },
+  });
+}
+
+export function useCreateBatchTimeSlots() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<{ slotsCreated: number }>, Error, CreateBatchTimeSlotsInput>({
+    mutationFn: doctorApi.createBatchSlots,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["availableSlots", variables.doctorId] });
+      queryClient.invalidateQueries({ queryKey: doctorKeys.availableDates(variables.doctorId) });
+    },
+  });
+}
 
 // --------------------- Get single slot by ID ---------------------
 export function useSlot(

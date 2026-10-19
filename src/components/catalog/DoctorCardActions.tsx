@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { toSlug } from "@/lib/helpers/stringHelpers";
+import { toSlug } from "@/lib/helpers";
 import { useDoctorStore } from "@/stores/doctorStore";
 import type { Doctor } from "@/types";
 

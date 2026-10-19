@@ -49,10 +49,12 @@ export function ScrollableFilter<T>({
       {/* Left Arrow */}
       {canScrollLeft && (
         <button
+          type="button"
           onClick={() => scrollByAmount(-250)}
+          aria-label="Show previous specializations"
           className="shrink-0 mr-2 p-2 bg-white shadow-md rounded-full border border-gray-200 hover:bg-gray-50"
         >
-          <ChevronLeft className="h-5 w-5 text-gray-600" />
+          <ChevronLeft className="h-5 w-5 text-gray-600" aria-hidden="true" />
         </button>
       )}
 
@@ -85,10 +87,12 @@ export function ScrollableFilter<T>({
       {/* Right Arrow */}
       {canScrollRight && (
         <button
+          type="button"
           onClick={() => scrollByAmount(250)}
+          aria-label="Show more specializations"
           className="shrink-0 ml-2 p-2 bg-white shadow-md rounded-full border border-gray-200 hover:bg-gray-50"
         >
-          <ChevronRight className="h-5 w-5 text-gray-600" />
+          <ChevronRight className="h-5 w-5 text-gray-600" aria-hidden="true" />
         </button>
       )}
     </div>

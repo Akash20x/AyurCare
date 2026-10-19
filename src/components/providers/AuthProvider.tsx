@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
-import { getAuthToken } from "@/lib/api";
 import { QueryProvider } from "./QueryProvider";
 
 interface AuthProviderProps {
@@ -10,25 +9,27 @@ interface AuthProviderProps {
 }
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { getMe, setLoading } = useAuthStore();
+  // Subscribe only to stable actions. Subscribing to the whole store makes this
+  // component re-render for every auth-state update during initialization.
+  const getSession = useAuthStore((state) => state.getSession);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
+  const setLoading = useAuthStore((state) => state.setLoading);
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = getAuthToken();
-      if (token) {
-        try {
-          setLoading(true);
-          await getMe();
-        } catch (error) {
-          console.error("Failed to initialize auth:", error);
-        } finally {
-          setLoading(false);
-        }
+      try {
+        setLoading(true);
+        const { authenticated, shouldRefresh } = await getSession();
+        if (!authenticated && shouldRefresh) await refreshToken();
+      } catch (error) {
+        console.error("Failed to initialize auth:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     initializeAuth();
-  }, [getMe, setLoading]);
+  }, [getSession, refreshToken, setLoading]);
 
   return <>{children}</>;
 }

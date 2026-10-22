@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
@@ -39,7 +39,7 @@ export default function PatientsPage() {
                   <td className="whitespace-nowrap px-5 py-1 align-middle">{formatDate(patient.createdAt)}</td>
                   <td className="px-5 py-1 align-middle text-right">
                     <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
-                      <Link href={`/admin/patients/${patient.id}`}>History <ArrowUpRight className="size-3 sm:size-4" aria-hidden="true" /></Link>
+                      <AppLink href={`/admin/patients/${patient.id}`}>History <ArrowUpRight className="size-3 sm:size-4" aria-hidden="true" /></AppLink>
                     </Button>
                   </td>
                 </tr>

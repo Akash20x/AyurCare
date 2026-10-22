@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAuthStore } from "@/stores/authStore";
 import { Menu, User, Calendar, LogOut, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useRouter } from "next/navigation";
 import { clearBookingRecoveryContext } from "@/lib/bookingRecovery";
 
@@ -48,31 +48,30 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" prefetch={false} className="text-2xl font-bold text-green-700">
+          <AppLink href="/" className="text-2xl font-bold text-green-700">
             AyurCare
-          </Link>
+          </AppLink>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex space-x-6">
-            <Link
+            <AppLink
               href="/explore"
-              prefetch={false}
               className="text-gray-700 dark:text-gray-200 hover:text-green-700 transition"
             >
               Find Doctors
-            </Link>
-            <Link
+            </AppLink>
+            <AppLink
               href="/specializations"
               className="text-gray-700 dark:text-gray-200 hover:text-green-700 transition"
             >
               Specializations
-            </Link>
+            </AppLink>
           </nav>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
             {!isAuthenticated ? (
-              <Link href="/login">
+              <AppLink href="/login">
                 <Button
                   variant="outline"
                   size="sm"
@@ -81,7 +80,7 @@ export default function Header() {
                   <User className="w-4 h-4" />
                   Sign In
                 </Button>
-              </Link>
+              </AppLink>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -97,19 +96,19 @@ export default function Header() {
                   <DropdownMenuLabel>{user?.email || "My Account"}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer outline-none">
+                    <AppLink href="/dashboard" className="flex items-center gap-2 cursor-pointer outline-none">
                       <Calendar className="w-4 h-4" />
                       Dashboard
-                    </Link>
+                    </AppLink>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {user?.role === "admin" && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link href="/admin" className="flex items-center gap-2 cursor-pointer outline-none">
+                        <AppLink href="/admin" className="flex items-center gap-2 cursor-pointer outline-none">
                           <ShieldCheck className="w-4 h-4" />
                           Admin
-                        </Link>
+                        </AppLink>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
@@ -172,43 +171,42 @@ export default function Header() {
 
                 {/* Menu Links */}
                 <div className="space-y-4">
-                  <Link
+                  <AppLink
                     href="/explore"
-                    prefetch={false}
                     onClick={() => setOpen(false)}
                     className="block text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                   >
                     Find Doctors
-                  </Link>
+                  </AppLink>
 
-                  <Link
+                  <AppLink
                     href="/specializations"
                     onClick={() => setOpen(false)}
                     className="block text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                   >
                     Specializations
-                  </Link>
+                  </AppLink>
 
                   {isAuthenticated ? (
                     <>
-                      <Link
+                      <AppLink
                         href="/dashboard"
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-2 text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                       >
                         <Calendar className="w-4 h-4" />
                         Dashboard
-                      </Link>
+                      </AppLink>
 
                       {user?.role === "admin" && (
-                        <Link
+                        <AppLink
                           href="/admin"
                           onClick={() => setOpen(false)}
                           className="flex items-center gap-2 text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                         >
                           <ShieldCheck className="w-4 h-4" />
                           Admin
-                        </Link>
+                        </AppLink>
                       )}
 
                       <button
@@ -223,14 +221,14 @@ export default function Header() {
                       </button>
                     </>
                   ) : (
-                    <Link
+                    <AppLink
                       href="/login"
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2 text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                     >
                       <User className="w-4 h-4" />
                       Sign In
-                    </Link>
+                    </AppLink>
                   )}
 
                   <div className="mt-4">

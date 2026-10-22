@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import type { ReactNode } from "react";
 import { Stethoscope, CalendarDays, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -82,7 +82,7 @@ function AdminAction({
   href: string;
 }) {
   return (
-    <Link href={href} className="group block h-36 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2">
+    <AppLink href={href} className="group block h-36 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2">
       <Card className="h-full cursor-pointer gap-0 overflow-hidden border-green-100 !py-0 shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-green-300 group-hover:bg-green-50/70 group-hover:shadow-md dark:border-green-900/60 dark:group-hover:border-green-700 dark:group-hover:bg-green-950/20">
         <CardContent className="flex h-full items-center gap-4 p-5">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700 ring-1 ring-green-100 transition-colors group-hover:bg-green-100 dark:bg-green-900/40 dark:ring-green-800 dark:group-hover:bg-green-900/70" aria-hidden="true">
@@ -94,6 +94,6 @@ function AdminAction({
           </div>
         </CardContent>
       </Card>
-    </Link>
+    </AppLink>
   );
 }

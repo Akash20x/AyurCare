@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { CalendarDays, CalendarPlus, Pencil, Plus, Search, Stethoscope } from "lucide-react";
@@ -47,7 +47,7 @@ export default function AdminDoctorsPage() {
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
         <div><h1 className="text-3xl font-bold tracking-tight">Doctors</h1><p className="mt-2 text-muted-foreground">Create profiles and manage appointment availability.</p></div>
-        <Button asChild className="bg-green-700 hover:bg-green-800 text-white"><Link href="/admin/doctors/new"><Plus aria-hidden="true" />Add doctor</Link></Button>
+        <Button asChild className="bg-green-700 hover:bg-green-800 text-white"><AppLink href="/admin/doctors/new"><Plus aria-hidden="true" />Add doctor</AppLink></Button>
       </div>
       <div className="mb-4 flex gap-2"><Button variant={tab === "doctors" ? "default" : "outline"} onClick={() => setTab("doctors")}>Doctors</Button><Button variant={tab === "slots" ? "default" : "outline"} onClick={() => setTab("slots")}>Upcoming slots</Button></div>
       {tab === "slots" ? (
@@ -133,13 +133,13 @@ export default function AdminDoctorsPage() {
                   </div>
                   <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
                     <Button asChild size="sm" variant="outline" className="h-10">
-                      <Link href={`/admin/doctors/${doctor.id}/edit`}><Pencil className="size-4" aria-hidden="true" />Edit</Link>
+                      <AppLink href={`/admin/doctors/${doctor.id}/edit`}><Pencil className="size-4" aria-hidden="true" />Edit</AppLink>
                     </Button>
                     <Button asChild size="sm" className="h-10 bg-green-700 text-white hover:bg-green-800">
-                      <Link href={`/admin/doctors/${doctor.id}/schedule`}><CalendarPlus className="size-4" aria-hidden="true" />Schedule</Link>
+                      <AppLink href={`/admin/doctors/${doctor.id}/schedule`}><CalendarPlus className="size-4" aria-hidden="true" />Schedule</AppLink>
                     </Button>
                     <Button asChild size="sm" variant="outline" className="col-span-2 h-10 border-green-200 text-green-800 hover:bg-green-50 hover:text-green-900">
-                      <Link href={`/admin/doctors/${doctor.id}/appointments`}><CalendarDays className="size-4" aria-hidden="true" />Appointments</Link>
+                      <AppLink href={`/admin/doctors/${doctor.id}/appointments`}><CalendarDays className="size-4" aria-hidden="true" />Appointments</AppLink>
                     </Button>
                   </div>
                 </article>

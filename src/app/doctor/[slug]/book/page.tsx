@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { ArrowLeft } from "lucide-react";
 import BookAppointmentClient from "./BookAppointmentClient";
 import { getDoctorBySlug } from "@/lib/server/doctorCatalog";
@@ -28,14 +28,13 @@ export default async function BookAppointmentPage({
       }}
     >
       <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
-        <Link
+        <AppLink
           href={`/doctor/${slug}`}
-          prefetch={false}
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900 sm:mb-6 sm:text-base"
         >
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           Back
-        </Link>
+        </AppLink>
 
         <div className="mb-6 px-2 text-center sm:mb-10">
           <h1 className="mb-2 text-2xl font-bold text-green-800 sm:mb-3 sm:text-3xl md:text-4xl">

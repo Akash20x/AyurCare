@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { UserLoginInput, userLoginSchema } from "@/lib/validations";
@@ -148,9 +148,9 @@ export default function LoginPageClient() {
 
             <p className="text-center text-sm text-gray-600">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-green-700 hover:underline font-medium cursor-pointer">
+              <AppLink href="/signup" className="text-green-700 hover:underline font-medium cursor-pointer">
                 Sign up
-              </Link>
+              </AppLink>
             </p>
           </CardContent>
         </Card>

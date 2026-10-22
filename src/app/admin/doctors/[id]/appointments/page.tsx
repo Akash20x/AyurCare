@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays } from "lucide-react";
@@ -47,7 +47,7 @@ export default function DoctorUpcomingAppointmentsPage() {
     return (
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Button asChild variant="outline" className="mb-6">
-          <Link href="/admin/doctors"><ArrowLeft className="size-4" aria-hidden="true" />Back to doctors</Link>
+          <AppLink href="/admin/doctors"><ArrowLeft className="size-4" aria-hidden="true" />Back to doctors</AppLink>
         </Button>
         <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Unable to load the doctor’s upcoming appointments.</p>
       </main>
@@ -59,7 +59,7 @@ export default function DoctorUpcomingAppointmentsPage() {
   return (
     <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <Button asChild variant="outline" className="mb-6">
-        <Link href="/admin/doctors"><ArrowLeft className="size-4" aria-hidden="true" />Back to doctors</Link>
+        <AppLink href="/admin/doctors"><ArrowLeft className="size-4" aria-hidden="true" />Back to doctors</AppLink>
       </Button>
 
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -69,7 +69,7 @@ export default function DoctorUpcomingAppointmentsPage() {
           <p className="mt-2 text-muted-foreground">{doctor.specialization} · Next 10 confirmed appointments</p>
         </div>
         <Button asChild className="bg-green-700 text-white hover:bg-green-800">
-          <Link href={`/admin/doctors/${doctor.id}/schedule`}><CalendarDays className="size-4" aria-hidden="true" />Manage schedule</Link>
+          <AppLink href={`/admin/doctors/${doctor.id}/schedule`}><CalendarDays className="size-4" aria-hidden="true" />Manage schedule</AppLink>
         </Button>
       </div>
 

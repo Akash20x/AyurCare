@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import z from "zod";
@@ -226,12 +226,12 @@ export default function SignupPage() {
 
             <p className="text-center text-sm text-gray-600 mt-6">
               Already have an account?{" "}
-              <Link
+              <AppLink
                 href="/login"
                 className="text-green-700 font-medium hover:underline"
               >
                 Sign in
-              </Link>
+              </AppLink>
             </p>
           </CardContent>
         </Card>

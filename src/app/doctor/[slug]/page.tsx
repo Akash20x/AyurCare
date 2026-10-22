@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { AppLink } from "@/components/shared/AppLink";
 import { Calendar, MapPin, Award, Building2, Languages } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,12 @@ export default async function DoctorProfilePage({
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-[#fafaf8] p-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-5xl">
-        <Link
+        <AppLink
           href="/explore"
-          prefetch={false}
           className="mb-4 inline-block text-emerald-700 hover:underline text-sm"
         >
           ← Back to Doctors
-        </Link>
+        </AppLink>
 
         <Card className="grid grid-cols-1 items-start gap-6 rounded-2xl border border-gray-200 p-4 shadow-sm sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_16rem] md:gap-x-6 md:gap-y-0 md:p-8 lg:grid-cols-[auto_minmax(0,1fr)_20rem] lg:gap-x-8">
           <div
@@ -109,9 +108,9 @@ export default async function DoctorProfilePage({
                 className="w-full bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center gap-2"
                 asChild
               >
-                <Link href={`/doctor/${toSlug(doctor.name)}/book`} prefetch={false}>
+                <AppLink href={`/doctor/${toSlug(doctor.name)}/book`}>
                   <Calendar size={18} /> Book Appointment
-                </Link>
+                </AppLink>
               </Button>
               <p className="text-gray-600 text-sm mt-3">
                 Schedule your consultation today

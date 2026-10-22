@@ -48,7 +48,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-green-700">
+          <Link href="/" prefetch={false} className="text-2xl font-bold text-green-700">
             AyurCare
           </Link>
 
@@ -56,6 +56,7 @@ export default function Header() {
           <nav className="hidden md:flex space-x-6">
             <Link
               href="/explore"
+              prefetch={false}
               className="text-gray-700 dark:text-gray-200 hover:text-green-700 transition"
             >
               Find Doctors
@@ -173,6 +174,7 @@ export default function Header() {
                 <div className="space-y-4">
                   <Link
                     href="/explore"
+                    prefetch={false}
                     onClick={() => setOpen(false)}
                     className="block text-gray-800 dark:text-gray-200 text-base hover:text-green-700"
                   >

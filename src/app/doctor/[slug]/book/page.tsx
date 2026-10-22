@@ -30,6 +30,7 @@ export default async function BookAppointmentPage({
       <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
         <Link
           href={`/doctor/${slug}`}
+          prefetch={false}
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-green-800 hover:text-green-900 sm:mb-6 sm:text-base"
         >
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />

@@ -31,6 +31,7 @@ export default async function DoctorProfilePage({
       <div className="mx-auto max-w-5xl">
         <Link
           href="/explore"
+          prefetch={false}
           className="mb-4 inline-block text-emerald-700 hover:underline text-sm"
         >
           ← Back to Doctors
@@ -108,7 +109,7 @@ export default async function DoctorProfilePage({
                 className="w-full bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center gap-2"
                 asChild
               >
-                <Link href={`/doctor/${toSlug(doctor.name)}/book`}>
+                <Link href={`/doctor/${toSlug(doctor.name)}/book`} prefetch={false}>
                   <Calendar size={18} /> Book Appointment
                 </Link>
               </Button>

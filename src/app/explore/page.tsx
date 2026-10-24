@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { DoctorGridSkeleton } from "@/components/catalog/DoctorGridSkeleton";
+import { ExplorePageSkeleton } from "@/components/catalog/ExplorePageSkeleton";
 import ExplorePageClient from "./ExplorePageClient";
 import { listDoctorPage, normalizeDoctorQuery } from "@/lib/server/doctorCatalog";
 
@@ -18,7 +18,7 @@ async function ExploreResults({ searchParams }: { searchParams: Promise<Record<s
 
 export default function ExplorePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
-    <Suspense fallback={<DoctorGridSkeleton />}>
+    <Suspense fallback={<ExplorePageSkeleton />}>
       <ExploreResults searchParams={searchParams} />
     </Suspense>
   );

@@ -1,14 +1,31 @@
-name: CI/CD
+name: Frontend CI
 
 on:
+  pull_request:
+    branches:
+      - main
+
   push:
     branches:
-      - main   # Runs on every push to main branch
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
-    name: Verify (Lint + Build)
+    name: Test, Lint and Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,21 +33,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
       - name: Run ESLint
         run: npm run lint
 
-      - name: Build Next.js app
+      - name: Build Next.js application
         run: npm run build
-
-  deploy:
-    name: Deploy to Vercel
-    needs: verify   # Runs only if verify job passes
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Vercel Deploy Hook
-        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}

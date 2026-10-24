@@ -168,7 +168,6 @@ export default function DashboardPage() {
                 }}
               >
                 <option value="BOOKED">Booked</option>
-                <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
                 <option value="RESCHEDULED">Rescheduled</option>
                 <option value="all">All Status</option>
@@ -215,31 +214,35 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {appointment.timeSlot && appointment.status !== "RESCHEDULED" ? (
-                    <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 text-gray-600 text-sm">
-                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                        <CalendarDays className="w-4 h-4 text-green-700" />
-                        {new Date(appointment.timeSlot.date).toLocaleDateString(
-                        "en-US",
-                        {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                        )}
-                      </div>
+                  {appointment.timeSlot ? (
+                    <div className="mt-3">
+                      {appointment.status === "RESCHEDULED" && <p className="mb-2 text-xs font-semibold text-blue-800 sm:text-sm">Previous appointment</p>}
+                      <div className="flex flex-wrap gap-2 text-sm text-gray-600 sm:gap-3">
+                        <div className={`flex items-center gap-1 rounded-md px-2 py-1 ${appointment.status === "RESCHEDULED" ? "bg-blue-50" : "bg-green-50"}`}>
+                          <CalendarDays className={`h-4 w-4 ${appointment.status === "RESCHEDULED" ? "text-blue-700" : "text-green-700"}`} />
+                          {new Date(appointment.timeSlot.date).toLocaleDateString(
+                            "en-US",
+                            {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
+                        </div>
 
-                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                        <Clock className="w-4 h-4 text-green-700" />
-                        {formatTimeOnly(appointment.timeSlot.startTime)} –{" "}
-                        {formatTimeOnly(appointment.timeSlot.endTime)}
+                        <div className={`flex items-center gap-1 rounded-md px-2 py-1 ${appointment.status === "RESCHEDULED" ? "bg-blue-50" : "bg-green-50"}`}>
+                          <Clock className={`h-4 w-4 ${appointment.status === "RESCHEDULED" ? "text-blue-700" : "text-green-700"}`} />
+                          {formatTimeOnly(appointment.timeSlot.startTime)} –{" "}
+                          {formatTimeOnly(appointment.timeSlot.endTime)}
+                        </div>
                       </div>
+                      {appointment.status === "RESCHEDULED" && <p className="mt-2 text-sm text-muted-foreground">This appointment was rescheduled. Check your active appointment for the updated time.</p>}
                     </div>
                   ) : (
                     <p className="mt-3 text-sm text-muted-foreground">
                       {appointment.status === "RESCHEDULED"
-                        ? "Rescheduled history — this record has no active slot."
+                        ? "This rescheduled record has no saved previous time."
                         : "This appointment has no active slot."}
                     </p>
                   )}

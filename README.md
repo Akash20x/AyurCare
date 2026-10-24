@@ -62,7 +62,7 @@ AyurCare is built using the following tech stack and additional libraries:
 
 - View upcoming and past appointments
 - View appointment details and current status
-- Filter by status: Booked, Completed, Cancelled, Rescheduled
+- Filter by status: Booked, Cancelled, Rescheduled
 
 ### 5. Authentication
 

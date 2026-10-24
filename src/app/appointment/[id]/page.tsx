@@ -120,16 +120,16 @@ export default function AppointmentDetailsPage() {
           </CardHeader>
 
           <CardContent className="space-y-5 px-5 py-5 sm:px-7 sm:py-6">
-            {appointment.timeSlot && appointment.status !== "RESCHEDULED" ? (
-              <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4 sm:p-5" aria-labelledby="visit-heading">
-                <h2 id="visit-heading" className="mb-4 text-base font-semibold text-slate-900">Your visit</h2>
+            {appointment.timeSlot ? (
+              <section className={`rounded-xl border p-4 sm:p-5 ${appointment.status === "RESCHEDULED" ? "border-blue-100 bg-blue-50/70" : "border-emerald-100 bg-emerald-50/70"}`} aria-labelledby="visit-heading">
+                <h2 id="visit-heading" className="mb-4 text-base font-semibold text-slate-900">{appointment.status === "RESCHEDULED" ? "Previous appointment" : "Your visit"}</h2>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="flex items-start gap-2.5">
-                    <CalendarDays className="mt-0.5 size-4 shrink-0 text-green-700" aria-hidden="true" />
+                    <CalendarDays className={`mt-0.5 size-4 shrink-0 ${appointment.status === "RESCHEDULED" ? "text-blue-700" : "text-green-700"}`} aria-hidden="true" />
                     <div><p className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</p><p className="mt-0.5 text-sm font-semibold text-slate-800">{formatDateLong(appointment.timeSlot.date)}</p></div>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <Clock3 className="mt-0.5 size-4 shrink-0 text-green-700" aria-hidden="true" />
+                    <Clock3 className={`mt-0.5 size-4 shrink-0 ${appointment.status === "RESCHEDULED" ? "text-blue-700" : "text-green-700"}`} aria-hidden="true" />
                     <div><p className="text-xs font-medium uppercase tracking-wide text-slate-500">Time</p><p className="mt-0.5 whitespace-nowrap text-sm font-semibold text-slate-800">{formatTimeOnly(appointment.timeSlot.startTime)}–{formatTimeOnly(appointment.timeSlot.endTime)}</p></div>
                   </div>
                   {appointment.consultationFee !== null && (
@@ -139,6 +139,7 @@ export default function AppointmentDetailsPage() {
                     </div>
                   )}
                 </div>
+                {appointment.status === "RESCHEDULED" && <p className="mt-4 border-t border-blue-100 pt-3 text-sm text-slate-600">This appointment was rescheduled. Check your active appointment for the updated time.</p>}
               </section>
             ) : (
               <section className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">

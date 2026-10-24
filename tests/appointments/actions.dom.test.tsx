@@ -68,4 +68,19 @@ describe('Appointment cancellation UI', () => {
     expect(screen.queryByRole('button', { name: 'Cancel appointment' })).toBeNull();
     expect(screen.getByText(/available until 24 hours before the appointment/)).toBeTruthy();
   });
+
+  it('shows the previous time for a rescheduled appointment without active actions', () => {
+    hooks.appointment.mockReturnValue({
+      data: { data: { ...appointment, status: 'RESCHEDULED' } },
+      isLoading: false,
+      error: null,
+    });
+    render(<AppointmentDetailsPage />);
+
+    expect(screen.getByRole('heading', { name: 'Previous appointment' })).toBeTruthy();
+    expect(screen.getByText('10:00 AM–10:30 AM')).toBeTruthy();
+    expect(screen.getByText(/Check your active appointment for the updated time/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Reschedule' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Cancel appointment' })).toBeNull();
+  });
 });

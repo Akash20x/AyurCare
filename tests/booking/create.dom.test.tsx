@@ -68,7 +68,7 @@ describe('Booking form', () => {
     render(<BookAppointmentClient doctor={doctor} slug="dr-asha" />);
     expect(screen.queryByLabelText('Email address *')).toBeNull();
     expect(screen.queryByLabelText('Patient name *')).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in to continue' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     const loginUrl = new URL(router.push.mock.calls[0][0], 'http://localhost');
     const returnUrl = new URL(loginUrl.searchParams.get('next')!, 'http://localhost');

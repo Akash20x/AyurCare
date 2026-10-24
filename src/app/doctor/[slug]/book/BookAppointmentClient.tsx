@@ -415,9 +415,7 @@ export default function BookAppointmentClient({ doctor, slug }: { doctor: Doctor
             >
               {createDraftMutation.isPending || requestDraftOtpMutation.isPending
                 ? "Reserving slot..."
-                : isAuthenticated === false
-                  ? "Sign in to continue"
-                  : "Continue"}
+                : "Continue"}
             </Button>
             {formError && <p className="text-sm text-red-600 text-center">{formError}</p>}
             {!canContinue && isAuthenticated !== null && (

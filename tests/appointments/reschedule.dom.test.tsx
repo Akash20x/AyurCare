@@ -15,12 +15,14 @@ vi.mock('sonner', () => ({ toast }));
 vi.mock('@/stores/authStore', () => ({ useAuthStore: () => ({ isAuthenticated: true }) }));
 vi.mock('@/hooks', () => ({
   useDoctorById: () => ({
-    data: { data: { id: 'doctor-1', name: 'Dr. Asha', specialization: 'Panchakarma' } },
+    data: { data: { id: 'doctor-1', name: 'Dr. Asha', specialization: 'Panchakarma', consultationFee: 500, clinicName: 'AyurCare Clinic', city: 'Delhi' } },
     isLoading: false,
     error: null,
   }),
-  useSlot: () => ({
-    data: { data: { slotId: 'new-slot', date: '2099-01-10', startTime: '10:00', endTime: '10:30' } },
+  useSlot: (_doctorId: string, slotId: string) => ({
+    data: { data: slotId === 'old-slot'
+      ? { slotId: 'old-slot', date: '2099-01-09', startTime: '09:00', endTime: '09:30' }
+      : { slotId: 'new-slot', date: '2099-01-10', startTime: '10:00', endTime: '10:30' } },
     isLoading: false,
     error: null,
   }),
@@ -39,7 +41,9 @@ describe('Reschedule confirmation', () => {
     hooks.confirm.mockReturnValue({ isPending: false, mutate: confirm });
     render(<RescheduleConfirmationPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reschedule Appointment' }));
+    expect(screen.getByRole('heading', { name: 'Current appointment' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'New appointment' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm reschedule' }));
 
     expect(confirm).toHaveBeenCalledWith({
       appointmentId: 'appointment-1',
@@ -59,7 +63,7 @@ describe('Reschedule confirmation', () => {
     });
     render(<RescheduleConfirmationPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reschedule Appointment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm reschedule' }));
 
     expect(toast.error).toHaveBeenCalledWith('Slot no longer available');
     expect(router.push).not.toHaveBeenCalledWith('/dashboard');

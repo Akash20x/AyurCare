@@ -7,6 +7,14 @@ import { getBookingRecoveryContext } from '@/lib/bookingRecovery';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 const search = vi.hoisted(() => ({ value: '' }));
 const auth = vi.hoisted(() => ({ state: { isAuthenticated: false, user: null as { name: string; email: string } | null } }));
+const booking = vi.hoisted(() => ({
+  consultationMode: 'in_person',
+  selectedDate: '2099-01-10' as string | null,
+  selectedSlotId: 'slot-1' as string | null,
+  setConsultationMode: vi.fn(),
+  setSelectedDate: vi.fn(),
+  setSelectedSlotId: vi.fn(),
+}));
 const hooks = vi.hoisted(() => ({
   createDraft: vi.fn(),
   requestOtp: vi.fn(),
@@ -20,19 +28,12 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/stores/authStore', () => ({ useAuthStore: () => auth.state }));
 vi.mock('@/stores/doctorStore', () => ({
-  useDoctorStore: () => ({
-    consultationMode: 'in_person',
-    selectedDate: '2099-01-10',
-    selectedSlotId: 'slot-1',
-    setConsultationMode: vi.fn(),
-    setSelectedDate: vi.fn(),
-    setSelectedSlotId: vi.fn(),
-  }),
+  useDoctorStore: () => booking,
 }));
 vi.mock('@/hooks', () => ({
   filterSlots: (slots: unknown[]) => slots,
   useAvailableDates: () => ({ data: {
-    dates: ['2099-01-10'],
+    dates: ['2099-01-10', '2099-01-11'],
     slots: [{ slotId: 'slot-1', doctorId: 'doctor-1', date: '2099-01-10', startTime: '10:00', endTime: '10:30', status: 'AVAILABLE' }],
   }, isLoading: false }),
   useCreateBookingDraft: () => hooks.createDraft(),
@@ -56,6 +57,8 @@ describe('Booking form', () => {
     vi.clearAllMocks();
     search.value = '';
     auth.state = { isAuthenticated: false, user: { name: 'Asha', email: 'asha@example.com' } };
+    booking.selectedDate = '2099-01-10';
+    booking.selectedSlotId = 'slot-1';
     hooks.createDraft.mockReturnValue({ isPending: false, mutate: vi.fn() });
     hooks.requestOtp.mockReturnValue({ isPending: false, mutate: vi.fn() });
     hooks.reschedule.mockReturnValue({ isPending: false, mutate: vi.fn() });
@@ -63,7 +66,9 @@ describe('Booking form', () => {
 
   it('redirects unauthenticated users to login with the selected slot preserved', async () => {
     render(<BookAppointmentClient doctor={doctor} slug="dr-asha" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.queryByLabelText('Email address *')).toBeNull();
+    expect(screen.queryByLabelText('Patient name *')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in to continue' }));
 
     const loginUrl = new URL(router.push.mock.calls[0][0], 'http://localhost');
     const returnUrl = new URL(loginUrl.searchParams.get('next')!, 'http://localhost');
@@ -90,6 +95,17 @@ describe('Booking form', () => {
     expect(requestOtp).toHaveBeenCalled();
     expect(router.push).toHaveBeenCalledWith('/verify-otp');
     expect(getBookingRecoveryContext()).toEqual({ doctorSlug: 'dr-asha' });
+  });
+
+  it('requires a new time when the selected slot belongs to a previous date', () => {
+    auth.state = { isAuthenticated: true, user: { name: 'Asha', email: 'asha@example.com' } };
+    booking.selectedDate = '2099-01-11';
+    booking.selectedSlotId = 'slot-1';
+
+    render(<BookAppointmentClient doctor={doctor} slug="dr-asha" />);
+
+    expect(screen.getByText('Please select a date and time to continue')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveProperty('disabled', true);
   });
 
   it('blocks draft creation for an invalid contact email', async () => {

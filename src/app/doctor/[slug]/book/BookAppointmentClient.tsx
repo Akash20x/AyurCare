@@ -52,9 +52,7 @@ export default function BookAppointmentClient({ doctor, slug }: { doctor: Doctor
   const isRescheduling = Boolean(appointmentId && oldSlotId);
   useEffect(() => {
     setConsultationMode("in_person");
-
-    if (!selectedSlotId) setSelectedSlotId(searchParams.get("slotId"));
-  }, [searchParams, selectedSlotId, setConsultationMode, setSelectedSlotId]);
+  }, [setConsultationMode]);
 
   const { data: availability, isLoading: isAvailabilityLoading } = useAvailableDates(doctorId);
   const availableDates = useMemo(() => availability?.dates ?? [], [availability?.dates]);
@@ -97,12 +95,19 @@ export default function BookAppointmentClient({ doctor, slug }: { doctor: Doctor
   }, [availableDates, doctorId, searchParams, selectedDate, setSelectedDate, setSelectedSlotId]);
 
   const selectedContactEmail = contactEmail.trim() || user?.email || "";
-  const canContinue = Boolean(
+  const hasBookingSelection = Boolean(
     consultationMode
     && selectedDate
     && selectedSlotId
-    && selectedContactEmail
+    && slots.some((slot) => slot.slotId === selectedSlotId)
+  );
+  const hasRequiredDetails = Boolean(
+    selectedContactEmail
     && (isRescheduling || patient.name.trim())
+  );
+  const canContinue = hasBookingSelection && (
+    isAuthenticated === false
+    || (isAuthenticated === true && hasRequiredDetails)
   );
 
   const validateBookingDetails = () => {
@@ -334,7 +339,7 @@ export default function BookAppointmentClient({ doctor, slug }: { doctor: Doctor
             </Card>
           </div>
 
-          {!appointmentId && (
+          {!appointmentId && isAuthenticated === true && (
             <Card className="gap-0 overflow-hidden border border-emerald-100 py-0 shadow-sm">
               <CardHeader className="border-b border-emerald-100 bg-emerald-50/50 px-5 py-3 sm:px-6">
                 <CardTitle className="text-base font-semibold text-emerald-950 sm:text-lg">Contact and patient details</CardTitle>
@@ -408,12 +413,18 @@ export default function BookAppointmentClient({ doctor, slug }: { doctor: Doctor
               onClick={handleContinue}
               className="w-full max-w-md h-10 sm:h-12 bg-healing-green hover:bg-healing-green/90 text-white font-semibold shadow-lg text-sm sm:text-base"
             >
-              {createDraftMutation.isPending || requestDraftOtpMutation.isPending ? "Reserving slot..." : "Continue"}
+              {createDraftMutation.isPending || requestDraftOtpMutation.isPending
+                ? "Reserving slot..."
+                : isAuthenticated === false
+                  ? "Sign in to continue"
+                  : "Continue"}
             </Button>
             {formError && <p className="text-sm text-red-600 text-center">{formError}</p>}
-            {!canContinue && (
+            {!canContinue && isAuthenticated !== null && (
               <p className="text-xs sm:text-sm text-muted-foreground text-center">
-                Please select a date and time to continue
+                {!hasBookingSelection
+                  ? "Please select a date and time to continue"
+                  : "Enter the required contact and patient details to continue"}
               </p>
             )}
           </div>

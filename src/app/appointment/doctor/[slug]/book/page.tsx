@@ -141,9 +141,9 @@ export default function AppointmentConfirmationPage() {
                     <dt className="text-xs text-slate-500">Time</dt>
                     <dd className="mt-0.5 whitespace-nowrap text-sm font-medium text-slate-700">{formatTime12Hour(appointment.startTime, appointment.date)}–{formatTime12Hour(appointment.endTime, appointment.date)}</dd>
                   </div>
-                  <div className="col-span-2 md:col-span-1">
+                  <div className="col-span-2 min-w-0 md:col-span-1">
                     <dt className="text-xs text-slate-500">Venue</dt>
-                    <dd className="mt-0.5 text-sm font-medium leading-snug text-slate-700 md:whitespace-nowrap">{doctor.venue || "Venue not specified"}</dd>
+                    <dd className="mt-0.5 break-words text-sm font-medium leading-snug text-slate-700">{doctor.venue || "Venue not specified"}</dd>
                   </div>
                 </dl>
               </div>

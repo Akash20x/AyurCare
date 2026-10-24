@@ -25,10 +25,11 @@ import { useRouter } from "next/navigation";
 import { clearBookingRecoveryContext } from "@/lib/bookingRecovery";
 
 export default function Header() {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, isLoading, logout } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const isAuthPending = isAuthenticated === null || isLoading;
 
   const handleLogout = async () => {
     try {
@@ -70,7 +71,13 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {!isAuthenticated ? (
+            {isAuthPending ? (
+              <span
+                role="status"
+                aria-label="Checking sign-in status"
+                className="h-8 w-20 animate-pulse rounded-md border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800"
+              />
+            ) : !isAuthenticated ? (
               <AppLink href="/login">
                 <Button
                   variant="outline"
@@ -187,7 +194,12 @@ export default function Header() {
                     Specializations
                   </AppLink>
 
-                  {isAuthenticated ? (
+                  {isAuthPending ? (
+                    <div role="status" aria-label="Checking sign-in status" className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                      <span className="h-4 w-4 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
+                      <span>Checking account…</span>
+                    </div>
+                  ) : isAuthenticated ? (
                     <>
                       <AppLink
                         href="/dashboard"
